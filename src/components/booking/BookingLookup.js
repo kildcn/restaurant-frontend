@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Card, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Card, Row, Col, Form, Button, Alert } from 'react-bootstrap';
 import { FaSearch, FaCalendarAlt, FaClock, FaUsers, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import moment from 'moment';
 import { restaurantApi } from '../../services/api';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 const BookingLookup = () => {
   const [bookingReference, setBookingReference] = useState('');
@@ -24,8 +25,34 @@ const BookingLookup = () => {
     try {
       setLoading(true);
 
-      // Convert booking reference to full booking ID if needed or implement backend lookup
-      // For now, we'll assume the backend has an endpoint for looking up by reference
+      // Use the mock booking data for development and testing
+      // In production, this would be replaced with the actual API call
+
+      // Mocking a successful response for development
+      setTimeout(() => {
+        const mockBooking = {
+          _id: bookingReference,
+          status: 'confirmed',
+          date: new Date(),
+          timeSlot: {
+            start: new Date(new Date().setHours(19, 0)),
+            end: new Date(new Date().setHours(21, 0))
+          },
+          partySize: 4,
+          customer: {
+            name: 'John Doe',
+            email: customerEmail,
+            phone: '555-123-4567'
+          },
+          specialRequests: 'Window table preferred'
+        };
+
+        setBooking(mockBooking);
+        setLoading(false);
+      }, 1000);
+
+      // Commented out actual API call until backend is ready
+      /*
       const response = await restaurantApi.lookupBooking(bookingReference, customerEmail);
 
       if (response.success) {
@@ -33,10 +60,10 @@ const BookingLookup = () => {
       } else {
         setError(response.message || 'Booking not found. Please check your reference number and email.');
       }
+      */
     } catch (error) {
       console.error('Error looking up booking:', error);
       setError('An error occurred while looking up your booking. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
@@ -110,7 +137,7 @@ const BookingLookup = () => {
                       disabled={loading}
                     >
                       {loading ? (
-                        <Spinner animation="border" size="sm" />
+                        <LoadingSpinner size="sm" />
                       ) : (
                         <>
                           <FaSearch className="me-2" /> Check

@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+// src/components/admin/FloorPlan.js
+import React, { useState, useEffect } from 'react';
 import { Card, Form, Row, Col, Button, Badge, Modal } from 'react-bootstrap';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { FaUsers, FaCalendarAlt, FaClock, FaInfoCircle, FaObjectGroup } from 'react-icons/fa';
+import { FaUsers, FaCalendarAlt, FaClock, FaInfoCircle, FaObjectGroup, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import moment from 'moment';
 import { adminApi } from '../../services/api';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -10,19 +11,154 @@ import AlertMessage from '../common/AlertMessage';
 
 // Months array for the custom header
 const months = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
+
+// Bootstrap Modal DatePicker Component
+const BootstrapModalDatePicker = ({ selectedDate, onChange }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [tempDate, setTempDate] = useState(selectedDate || new Date());
+
+  // Format the date for display
+  const formatDate = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Handle opening the modal
+  const handleOpenModal = () => {
+    setTempDate(selectedDate);
+    setShowModal(true);
+  };
+
+  // Handle date selection in the DatePicker
+  const handleDateChange = (date) => {
+    setTempDate(date);
+  };
+
+  // Handle saving the date when clicking "Select Date"
+  const handleSaveDate = () => {
+    onChange(tempDate);
+    setShowModal(false);
+  };
+
+  return (
+    <>
+      {/* Date input field */}
+      <div className="input-group">
+        <input
+          type="text"
+          className="form-control"
+          value={formatDate(selectedDate)}
+          onClick={handleOpenModal}
+          readOnly
+        />
+        <button
+          className="btn btn-outline-secondary"
+          type="button"
+          onClick={handleOpenModal}
+        >
+          <FaCalendarAlt />
+        </button>
+      </div>
+
+      {/* Bootstrap Modal */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Select Date</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          {/* Use React-DatePicker inside the modal */}
+          <DatePicker
+            selected={tempDate}
+            onChange={handleDateChange}
+            inline
+            className="mx-auto" // Center the calendar
+            renderCustomHeader={({
+              date,
+              changeYear,
+              changeMonth,
+              decreaseMonth,
+              increaseMonth,
+              prevMonthButtonDisabled,
+              nextMonthButtonDisabled,
+            }) => (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '8px',
+                alignItems: 'center'
+              }}>
+                <button
+                  type="button"
+                  onClick={decreaseMonth}
+                  disabled={prevMonthButtonDisabled}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <FaChevronLeft />
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={date.getFullYear()}
+                    onChange={({ target: { value } }) => changeYear(parseInt(value))}
+                    className="form-select form-select-sm"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={months[date.getMonth()]}
+                    onChange={({ target: { value } }) =>
+                      changeMonth(months.indexOf(value))
+                    }
+                    className="form-select form-select-sm"
+                  >
+                    {months.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={increaseMonth}
+                  disabled={nextMonthButtonDisabled}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <FaChevronRight />
+                </button>
+              </div>
+            )}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSaveDate}>
+            Select Date
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
 
 // Table shape components
 const RoundTable = ({ table, onClick, isOccupied, bookingInfo, groupInfo, size = 100 }) => (
@@ -113,7 +249,6 @@ const FloorPlan = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingGroups, setBookingGroups] = useState({});
   const [bookingColors, setBookingColors] = useState({});
-  const datePickerRef = useRef(null);
 
   const [filterDate, setFilterDate] = useState(new Date());
   // Start with a default of 11:00 AM as a common restaurant opening time
@@ -336,81 +471,10 @@ const FloorPlan = () => {
                 <Form.Label className="d-flex align-items-center">
                   <FaCalendarAlt className="me-2" /> Date
                 </Form.Label>
-                <div className="date-picker-container">
-                  <DatePicker
-                    ref={datePickerRef}
-                    selected={filterDate}
-                    onChange={handleDateChange}
-                    className="form-control"
-                    dateFormat="MMMM d, yyyy"
-                    wrapperClassName="date-picker-wrapper"
-                    calendarClassName="date-picker-calendar"
-                    popperClassName="date-picker-popper"
-                    showMonthDropdown
-                    showYearDropdown
-                    dropdownMode="select"
-                    renderCustomHeader={({
-                      date,
-                      changeYear,
-                      changeMonth,
-                      decreaseMonth,
-                      increaseMonth,
-                      prevMonthButtonDisabled,
-                      nextMonthButtonDisabled,
-                    }) => (
-                      <div
-                        style={{
-                          margin: 10,
-                          display: "flex",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <button
-                          onClick={decreaseMonth}
-                          disabled={prevMonthButtonDisabled}
-                          className="btn btn-sm btn-outline-secondary me-2"
-                        >
-                          {"<"}
-                        </button>
-                        <select
-                          value={date.getFullYear()}
-                          onChange={({ target: { value } }) => changeYear(value)}
-                          className="form-select form-select-sm mx-1"
-                          style={{ width: "80px" }}
-                        >
-                          {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((year) => (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          ))}
-                        </select>
-
-                        <select
-                          value={months[date.getMonth()]}
-                          onChange={({ target: { value } }) =>
-                            changeMonth(months.indexOf(value))
-                          }
-                          className="form-select form-select-sm mx-1"
-                          style={{ width: "100px" }}
-                        >
-                          {months.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-
-                        <button
-                          onClick={increaseMonth}
-                          disabled={nextMonthButtonDisabled}
-                          className="btn btn-sm btn-outline-secondary ms-2"
-                        >
-                          {">"}
-                        </button>
-                      </div>
-                    )}
-                  />
-                </div>
+                <BootstrapModalDatePicker
+                  selectedDate={filterDate}
+                  onChange={handleDateChange}
+                />
               </Form.Group>
             </Col>
             <Col md={6}>

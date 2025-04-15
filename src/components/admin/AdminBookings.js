@@ -1,12 +1,164 @@
+// src/components/admin/AdminBookings.js
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Row, Col, Form, Button, Badge, Modal, Pagination, Alert } from 'react-bootstrap';
-import { FaSearch, FaFilter, FaCalendarAlt, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaCalendarAlt, FaEdit, FaTrash, FaPlus, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Link, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import { adminApi } from '../../services/api';
 import AlertMessage from '../common/AlertMessage';
 import LoadingSpinner from '../common/LoadingSpinner';
+
+// Bootstrap Modal DatePicker Component
+const BootstrapModalDatePicker = ({ selectedDate, onChange }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [tempDate, setTempDate] = useState(selectedDate || new Date());
+
+  // Format the date for display
+  const formatDate = (date) => {
+    if (!date) return '';
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // Handle opening the modal
+  const handleOpenModal = () => {
+    setTempDate(selectedDate);
+    setShowModal(true);
+  };
+
+  // Handle date selection in the DatePicker
+  const handleDateChange = (date) => {
+    setTempDate(date);
+  };
+
+  // Handle saving the date when clicking "Select Date"
+  const handleSaveDate = () => {
+    onChange(tempDate);
+    setShowModal(false);
+  };
+
+  return (
+    <>
+      {/* Date input field */}
+      <div className="input-group">
+        <input
+          type="text"
+          className="form-control"
+          value={formatDate(selectedDate)}
+          onClick={handleOpenModal}
+          readOnly
+        />
+        <button
+          className="btn btn-outline-secondary"
+          type="button"
+          onClick={handleOpenModal}
+        >
+          <FaCalendarAlt />
+        </button>
+      </div>
+
+      {/* Bootstrap Modal */}
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Select Date</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center">
+          {/* Use React-DatePicker inside the modal */}
+          <DatePicker
+            selected={tempDate}
+            onChange={handleDateChange}
+            inline
+            className="mx-auto" // Center the calendar
+            renderCustomHeader={({
+              date,
+              changeYear,
+              changeMonth,
+              decreaseMonth,
+              increaseMonth,
+              prevMonthButtonDisabled,
+              nextMonthButtonDisabled,
+            }) => (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '8px',
+                alignItems: 'center'
+              }}>
+                <button
+                  type="button"
+                  onClick={decreaseMonth}
+                  disabled={prevMonthButtonDisabled}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <FaChevronLeft />
+                </button>
+
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={date.getFullYear()}
+                    onChange={({ target: { value } }) => changeYear(parseInt(value))}
+                    className="form-select form-select-sm"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+
+                  <select
+                    value={months[date.getMonth()]}
+                    onChange={({ target: { value } }) =>
+                      changeMonth(months.indexOf(value))
+                    }
+                    className="form-select form-select-sm"
+                  >
+                    {months.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={increaseMonth}
+                  disabled={nextMonthButtonDisabled}
+                  className="btn btn-sm btn-outline-secondary"
+                >
+                  <FaChevronRight />
+                </button>
+              </div>
+            )}
+          />
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={handleSaveDate}>
+            Select Date
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+};
+
+// Months array for the custom header
+const months = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
 
 const AdminBookings = () => {
   const navigate = useNavigate();
@@ -140,6 +292,7 @@ const AdminBookings = () => {
 
         setSuccess('Booking deleted successfully');
         setShowDeleteModal(false);
+        setSelectedBooking(null);
       } else {
         setError('Failed to delete booking');
       }
@@ -190,12 +343,9 @@ const AdminBookings = () => {
                   <Form.Label className="d-flex align-items-center">
                     <FaCalendarAlt className="me-2" /> Date
                   </Form.Label>
-                  <DatePicker
-                    selected={filters.date}
+                  <BootstrapModalDatePicker
+                    selectedDate={filters.date}
                     onChange={handleDateChange}
-                    className="form-control"
-                    dateFormat="MMMM d, yyyy"
-                    disabled={filters.showAllDates}
                   />
                 </Form.Group>
                 <Form.Check
