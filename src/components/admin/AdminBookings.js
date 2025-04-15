@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Table, Row, Col, Form, Button, Badge, Modal, Pagination } from 'react-bootstrap';
-import { FaSearch, FaFilter, FaCalendarAlt, FaEdit, FaTrash } from 'react-icons/fa';
+import { Card, Table, Row, Col, Form, Button, Badge, Modal, Pagination, Alert } from 'react-bootstrap';
+import { FaSearch, FaFilter, FaCalendarAlt, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { Link, useNavigate } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import moment from 'moment';
 import { adminApi } from '../../services/api';
@@ -8,6 +9,7 @@ import AlertMessage from '../common/AlertMessage';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 const AdminBookings = () => {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,7 +18,8 @@ const AdminBookings = () => {
   const [filters, setFilters] = useState({
     date: new Date(),
     status: '',
-    search: ''
+    search: '',
+    showAllDates: false
   });
 
   const [pagination, setPagination] = useState({
@@ -32,12 +35,12 @@ const AdminBookings = () => {
 
   useEffect(() => {
     fetchBookings();
-  }, [filters.date, filters.status, pagination.page]);
+  }, [filters.date, filters.status, filters.showAllDates, pagination.page]);
 
   const fetchBookings = async () => {
     try {
       setLoading(true);
-      const formattedDate = moment(filters.date).format('YYYY-MM-DD');
+      const formattedDate = filters.showAllDates ? '' : moment(filters.date).format('YYYY-MM-DD');
 
       const response = await adminApi.getAllBookings({
         date: formattedDate,
@@ -70,7 +73,7 @@ const AdminBookings = () => {
   };
 
   const handleDateChange = (date) => {
-    setFilters(prev => ({ ...prev, date }));
+    setFilters(prev => ({ ...prev, date, showAllDates: false }));
   };
 
   const handleStatusChange = (e) => {
@@ -79,6 +82,10 @@ const AdminBookings = () => {
 
   const handleSearchInputChange = (e) => {
     setFilters(prev => ({ ...prev, search: e.target.value }));
+  };
+
+  const handleShowAllDatesChange = (e) => {
+    setFilters(prev => ({ ...prev, showAllDates: e.target.checked }));
   };
 
   const handlePageChange = (page) => {
@@ -157,9 +164,18 @@ const AdminBookings = () => {
     return <Badge bg={status_info.variant}>{status_info.text}</Badge>;
   };
 
+  const handleCreateBooking = () => {
+    navigate('/bookings');
+  };
+
   return (
     <div>
-      <h2 className="mb-4">Manage Bookings</h2>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2>Manage Bookings</h2>
+        <Button variant="primary" onClick={handleCreateBooking}>
+          <FaPlus className="me-2" /> Create New Booking
+        </Button>
+      </div>
 
       {error && <AlertMessage variant="danger" message={error} onClose={() => setError(null)} />}
       {success && <AlertMessage variant="success" message={success} onClose={() => setSuccess(null)} />}
@@ -179,8 +195,17 @@ const AdminBookings = () => {
                     onChange={handleDateChange}
                     className="form-control"
                     dateFormat="MMMM d, yyyy"
+                    disabled={filters.showAllDates}
                   />
                 </Form.Group>
+                <Form.Check
+                  type="checkbox"
+                  id="show-all-dates"
+                  label="Show all bookings"
+                  checked={filters.showAllDates}
+                  onChange={handleShowAllDatesChange}
+                  className="mt-2"
+                />
               </Col>
 
               <Col md={3}>
@@ -227,6 +252,25 @@ const AdminBookings = () => {
         </Card.Body>
       </Card>
 
+      {/* View Floor Plan Button */}
+      <div className="mb-4">
+        <Button
+          as={Link}
+          to="/admin/floor-plan"
+          variant="outline-primary"
+          className="d-flex align-items-center"
+        >
+          <FaCalendarAlt className="me-2" /> View Floor Plan / Seating Layout
+        </Button>
+      </div>
+
+      {/* Pending Bookings Alert */}
+      {bookings.filter(b => b.status === 'pending').length > 0 && (
+        <Alert variant="warning" className="mb-4">
+          <strong>Attention:</strong> There are {bookings.filter(b => b.status === 'pending').length} pending bookings that require your review.
+        </Alert>
+      )}
+
       {/* Bookings Table */}
       <Card>
         <Card.Body>
@@ -254,7 +298,7 @@ const AdminBookings = () => {
                 </thead>
                 <tbody>
                   {bookings.map(booking => (
-                    <tr key={booking._id}>
+                    <tr key={booking._id} className={booking.status === 'pending' ? 'table-warning' : ''}>
                       <td>
                         <div>{moment(booking.date).format('MMM D, YYYY')}</div>
                         <small>{moment(booking.timeSlot.start).format('h:mm A')} - {moment(booking.timeSlot.end).format('h:mm A')}</small>
@@ -262,6 +306,7 @@ const AdminBookings = () => {
                       <td>
                         <div>{booking.customer.name}</div>
                         <small className="text-muted">{booking.customer.email}</small>
+                        <div><small>{booking.customer.phone}</small></div>
                       </td>
                       <td>{booking.partySize}</td>
                       <td>

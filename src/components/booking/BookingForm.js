@@ -16,13 +16,14 @@ const BookingForm = () => {
   const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [error, setError] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
+  const [timeOptions, setTimeOptions] = useState([]);
 
   const [bookingData, setBookingData] = useState({
     customerName: currentUser ? currentUser.name : '',
     customerEmail: currentUser ? currentUser.email : '',
     customerPhone: currentUser ? currentUser.phone : '',
     date: new Date(),
-    time: '19:00',
+    time: '',
     partySize: 2,
     duration: 120,
     tableIds: [],
@@ -42,6 +43,18 @@ const BookingForm = () => {
         const response = await restaurantApi.getSettings();
         if (response.success) {
           setRestaurant(response.data);
+
+          // Generate time slots based on restaurant settings
+          const slots = generateTimeOptions(response.data, new Date());
+          setTimeOptions(slots);
+
+          // Set a default time if slots are available
+          if (slots.length > 0) {
+            setBookingData(prev => ({
+              ...prev,
+              time: slots[0]
+            }));
+          }
         }
       } catch (error) {
         console.error('Error fetching restaurant settings:', error);
@@ -61,6 +74,22 @@ const BookingForm = () => {
       }));
     }
   }, [currentUser]);
+
+  // Update time options when date changes
+  useEffect(() => {
+    if (restaurant) {
+      const slots = generateTimeOptions(restaurant, bookingData.date);
+      setTimeOptions(slots);
+
+      // Update the time if current selection is no longer available
+      if (slots.length > 0 && !slots.includes(bookingData.time)) {
+        setBookingData(prev => ({
+          ...prev,
+          time: slots[0]
+        }));
+      }
+    }
+  }, [bookingData.date, restaurant]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -160,12 +189,12 @@ const BookingForm = () => {
     }
   };
 
-  const generateTimeOptions = () => {
-    if (!restaurant) return [];
+  const generateTimeOptions = (restaurantData, selectedDate) => {
+    if (!restaurantData) return [];
 
     const options = [];
-    const dayOfWeek = moment(bookingData.date).day();
-    const daySettings = restaurant.openingHours.find(h => h.day === dayOfWeek);
+    const dayOfWeek = moment(selectedDate).day();
+    const daySettings = restaurantData.openingHours.find(h => h.day === dayOfWeek);
 
     if (!daySettings || daySettings.isClosed) return [];
 
@@ -177,10 +206,11 @@ const BookingForm = () => {
       end.add(1, 'day');
     }
 
-    // Generate time slots in 30-minute increments
-    const increment = restaurant.bookingRules.timeSlotDuration || 30;
+    // Generate time slots in increments defined by restaurant settings
+    const increment = restaurantData.bookingRules?.timeSlotDuration || 30;
+    const maxDuration = bookingData.duration || 120;
 
-    while (start.isBefore(end.subtract(bookingData.duration, 'minutes'))) {
+    while (start.isBefore(end.clone().subtract(maxDuration, 'minutes'))) {
       options.push(start.format('HH:mm'));
       start.add(increment, 'minutes');
     }
@@ -189,14 +219,14 @@ const BookingForm = () => {
   };
 
   return (
-    <Container>
+    <Container className="py-4">
       <h1 className="text-center mb-4">Make a Reservation</h1>
 
       {error && <Alert variant="danger">{error}</Alert>}
 
       <Row>
         <Col md={6} className="mb-4">
-          <Card>
+          <Card className="border-0 shadow">
             <Card.Header>Reservation Details</Card.Header>
             <Card.Body>
               <Form onSubmit={handleCheckAvailability}>
@@ -213,16 +243,24 @@ const BookingForm = () => {
 
                 <Form.Group className="mb-3">
                   <Form.Label>Time</Form.Label>
-                  <Form.Select
-                    name="time"
-                    value={bookingData.time}
-                    onChange={handleInputChange}
-                    required
-                  >
-                    {generateTimeOptions().map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </Form.Select>
+                  {timeOptions.length > 0 ? (
+                    <Form.Select
+                      name="time"
+                      value={bookingData.time}
+                      onChange={handleInputChange}
+                      required
+                    >
+                      {timeOptions.map(time => (
+                        <option key={time} value={time}>
+                          {moment(time, 'HH:mm').format('h:mm A')}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  ) : (
+                    <Alert variant="warning">
+                      No available time slots for the selected date. Please select another date.
+                    </Alert>
+                  )}
                 </Form.Group>
 
                 <Form.Group className="mb-3">
@@ -233,14 +271,24 @@ const BookingForm = () => {
                     onChange={handleInputChange}
                     required
                   >
-                    {[...Array(10)].map((_, i) => (
-                      <option key={i+1} value={i+1}>{i+1} {i === 0 ? 'person' : 'people'}</option>
+                    {restaurant && restaurant.bookingRules && Array.from(
+                      { length: restaurant.bookingRules.maxPartySize },
+                      (_, i) => i + 1
+                    ).map(size => (
+                      <option key={size} value={size}>
+                        {size} {size === 1 ? 'person' : 'people'}
+                      </option>
+                    ))}
+                    {!restaurant && [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(size => (
+                      <option key={size} value={size}>
+                        {size} {size === 1 ? 'person' : 'people'}
+                      </option>
                     ))}
                   </Form.Select>
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  <Form.Label>Duration (minutes)</Form.Label>
+                  <Form.Label>Duration</Form.Label>
                   <Form.Select
                     name="duration"
                     value={bookingData.duration}
@@ -257,7 +305,7 @@ const BookingForm = () => {
                   variant="outline-primary"
                   type="submit"
                   className="w-100"
-                  disabled={availabilityLoading}
+                  disabled={availabilityLoading || timeOptions.length === 0}
                 >
                   {availabilityLoading ? <LoadingSpinner size="sm" /> : 'Check Availability'}
                 </Button>
@@ -267,7 +315,7 @@ const BookingForm = () => {
         </Col>
 
         <Col md={6}>
-          <Card>
+          <Card className="border-0 shadow">
             <Card.Header>Guest Information</Card.Header>
             <Card.Body>
               <Form onSubmit={handleSubmitBooking}>
@@ -318,7 +366,7 @@ const BookingForm = () => {
                 {availability.checked && (
                   <Alert variant={availability.available ? 'success' : 'warning'}>
                     {availability.available
-                      ? `Great! We have a table available for your party of ${bookingData.partySize} on ${moment(bookingData.date).format('MMMM D, YYYY')} at ${bookingData.time}.`
+                      ? `Great! We have a table available for your party of ${bookingData.partySize} on ${moment(bookingData.date).format('MMMM D, YYYY')} at ${moment(bookingData.time, 'HH:mm').format('h:mm A')}.`
                       : `Sorry, we don't have availability for your requested time. ${availability.reason}`
                     }
                   </Alert>

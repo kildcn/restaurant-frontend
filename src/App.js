@@ -8,18 +8,20 @@ import Footer from './components/common/Footer';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Pages
-import HomePage from './components/home/Homepage';
+import HomePage from './components/home/HomePage';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-import BookingForm from './components/booking/BookIngForm';
+import BookingForm from './components/booking/BookingForm';
 import BookingConfirmation from './components/booking/BookingConfirmation';
+import BookingLookup from './components/booking/BookingLookup';
 import UserBookings from './components/booking/UserBookings';
 import AdminDashboard from './components/admin/AdminDashboard';
-import AdminBookings from './components/admin/ADminBookings';
+import AdminBookings from './components/admin/AdminBookings';
 import AdminTables from './components/admin/AdminTables';
 import AdminRestaurant from './components/admin/AdminRestaurant';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminLayout from './components/admin/AdminLayout';
+import FloorPlan from './components/admin/FloorPlan';
 
 // Styles
 import './styles/main.css';
@@ -38,6 +40,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/bookings" element={<BookingForm />} />
               <Route path="/bookings/confirmation" element={<BookingConfirmation />} />
+              <Route path="/bookings/lookup" element={<BookingLookup />} />
 
               {/* Protected user routes */}
               <Route path="/my-bookings" element={
@@ -57,6 +60,7 @@ function App() {
                 <Route path="tables" element={<AdminTables />} />
                 <Route path="restaurant" element={<AdminRestaurant />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="floor-plan" element={<FloorPlan />} />
               </Route>
             </Routes>
           </main>

@@ -40,18 +40,21 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await api.post('/auth/login', { email, password });
 
-      if (response.success) {
+      // Check if the response contains a token
+      if (response.success && response.token) {
         localStorage.setItem('token', response.token);
         setCurrentUser(response.user);
         return { success: true };
       } else {
-        setError(response.message || 'Login failed');
-        return { success: false, message: response.message };
+        const errorMessage = response.message || 'Login failed. Please check your credentials.';
+        setError(errorMessage);
+        return { success: false, message: errorMessage };
       }
     } catch (err) {
-      const message = err.message || 'An error occurred during login';
-      setError(message);
-      return { success: false, message };
+      const errorMessage = err.message || 'An error occurred during login';
+      console.error('Login error:', err);
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
     }
   };
 
@@ -60,24 +63,32 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await api.post('/auth/register', userData);
 
-      if (response.success) {
+      if (response.success && response.token) {
         localStorage.setItem('token', response.token);
         setCurrentUser(response.user);
         return { success: true };
       } else {
-        setError(response.message || 'Registration failed');
-        return { success: false, message: response.message };
+        const errorMessage = response.message || 'Registration failed';
+        setError(errorMessage);
+        return { success: false, message: errorMessage };
       }
     } catch (err) {
-      const message = err.message || 'An error occurred during registration';
-      setError(message);
-      return { success: false, message };
+      const errorMessage = err.message || 'An error occurred during registration';
+      console.error('Registration error:', err);
+      setError(errorMessage);
+      return { success: false, message: errorMessage };
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    setCurrentUser(null);
+  const logout = async () => {
+    try {
+      // Call logout endpoint but don't wait for it
+      api.get('/auth/logout').catch(err => console.error('Logout API error:', err));
+    } finally {
+      // Always clear local storage and state
+      localStorage.removeItem('token');
+      setCurrentUser(null);
+    }
   };
 
   const value = {

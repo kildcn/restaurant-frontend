@@ -28,7 +28,10 @@ axiosInstance.interceptors.response.use(
     // Handle token expiration or unauthorized access
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Only redirect to login if not already on login page to avoid infinite loops
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error.response ? error.response.data : error);
   }
@@ -50,7 +53,8 @@ export const restaurantApi = {
   getUserBookings: () => api.get('/bookings'),
   getBooking: (id) => api.get(`/bookings/${id}`),
   updateBooking: (id, data) => api.put(`/bookings/${id}`, data),
-  cancelBooking: (id) => api.put(`/bookings/${id}/status`, { status: 'cancelled' })
+  cancelBooking: (id) => api.put(`/bookings/${id}/status`, { status: 'cancelled' }),
+  lookupBooking: (reference, email) => api.post('/bookings/lookup', { reference, email })
 };
 
 // Admin API functions
@@ -63,15 +67,26 @@ export const adminApi = {
   getTableAvailability: (date) => api.get(`/tables/availability/${date}`),
 
   // Bookings
-  getAllBookings: (filters) => {
-    const params = new URLSearchParams(filters);
+  getAllBookings: (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value);
+      }
+    });
     return api.get(`/bookings?${params}`);
   },
   updateBookingStatus: (id, status) => api.put(`/bookings/${id}/status`, { status }),
+  deleteBooking: (id) => api.delete(`/bookings/${id}`),
 
   // Users
-  getUsers: (filters) => {
-    const params = new URLSearchParams(filters);
+  getUsers: (filters = {}) => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, value);
+      }
+    });
     return api.get(`/users?${params}`);
   },
   getUser: (id) => api.get(`/users/${id}`),
@@ -80,6 +95,7 @@ export const adminApi = {
   deleteUser: (id) => api.delete(`/users/${id}`),
 
   // Restaurant settings
+  getSettings: () => api.get('/restaurant'),
   updateRestaurantSettings: (settings) => api.put('/restaurant', settings),
   updateOpeningHours: (openingHours) => api.put('/restaurant/opening-hours', { openingHours }),
   addSpecialEvent: (event) => api.post('/restaurant/special-events', event),

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button, NavDropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -22,22 +22,38 @@ const Header = () => {
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
             <Nav.Link as={Link} to="/">Home</Nav.Link>
-            <Nav.Link as={Link} to="/bookings">Reservations</Nav.Link>
+
+            {/* Reservation Dropdown */}
+            <NavDropdown title="Reservations" id="reservation-dropdown">
+              <NavDropdown.Item as={Link} to="/bookings">Make a Reservation</NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/bookings/lookup">Check Reservation Status</NavDropdown.Item>
+              {currentUser && (
+                <NavDropdown.Item as={Link} to="/my-bookings">My Reservations</NavDropdown.Item>
+              )}
+            </NavDropdown>
 
             {currentUser ? (
               <>
-                <Nav.Link as={Link} to="/my-bookings">My Reservations</Nav.Link>
                 {['admin', 'manager', 'staff'].includes(currentUser.role) && (
-                  <Nav.Link as={Link} to="/admin">Admin</Nav.Link>
+                  <NavDropdown title="Admin" id="admin-dropdown">
+                    <NavDropdown.Item as={Link} to="/admin">Dashboard</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="/admin/bookings">Manage Bookings</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="/admin/floor-plan">Floor Plan</NavDropdown.Item>
+                    <NavDropdown.Item as={Link} to="/admin/tables">Manage Tables</NavDropdown.Item>
+                    {['admin', 'manager'].includes(currentUser.role) && (
+                      <NavDropdown.Item as={Link} to="/admin/restaurant">Settings</NavDropdown.Item>
+                    )}
+                    {currentUser.role === 'admin' && (
+                      <NavDropdown.Item as={Link} to="/admin/users">Users</NavDropdown.Item>
+                    )}
+                  </NavDropdown>
                 )}
-                <Button
-                  variant="outline-light"
-                  size="sm"
-                  className="ms-2"
-                  onClick={handleLogout}
-                >
-                  Logout
-                </Button>
+
+                <NavDropdown title={currentUser.name} id="user-dropdown" align="end">
+                  <NavDropdown.Item as={Link} to="/my-bookings">My Reservations</NavDropdown.Item>
+                  <NavDropdown.Divider />
+                  <NavDropdown.Item onClick={handleLogout}>Logout</NavDropdown.Item>
+                </NavDropdown>
               </>
             ) : (
               <>
