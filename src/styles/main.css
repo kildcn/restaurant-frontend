@@ -19,38 +19,38 @@ h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
 }
 
-/* Custom colors */
+/* Custom colors - Updated to use #AA4A44 as primary color */
 .bg-dark {
   background-color: #2c3e50 !important;
 }
 
 .btn-primary {
-  background-color: #b8860b;
-  border-color: #b8860b;
+  background-color: #AA4A44;
+  border-color: #AA4A44;
 }
 
 .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
-  background-color: #a37908 !important;
-  border-color: #a37908 !important;
+  background-color: #964039 !important;
+  border-color: #964039 !important;
 }
 
 .btn-outline-primary {
-  color: #b8860b;
-  border-color: #b8860b;
+  color: #AA4A44;
+  border-color: #AA4A44;
 }
 
 .btn-outline-primary:hover, .btn-outline-primary:focus {
-  background-color: #b8860b;
-  border-color: #b8860b;
+  background-color: #AA4A44;
+  border-color: #AA4A44;
 }
 
 a {
-  color: #b8860b;
+  color: #AA4A44;
   text-decoration: none;
 }
 
 a:hover {
-  color: #a37908;
+  color: #964039;
   text-decoration: underline;
 }
 
@@ -103,13 +103,13 @@ a:hover {
 }
 
 .table-hover tbody tr:hover {
-  background-color: rgba(184, 134, 11, 0.05);
+  background-color: rgba(170, 74, 68, 0.05);
 }
 
 /* Form styling */
 .form-control:focus, .form-select:focus {
-  border-color: #b8860b;
-  box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.25);
+  border-color: #AA4A44;
+  box-shadow: 0 0 0 0.25rem rgba(170, 74, 68, 0.25);
 }
 
 /* DatePicker custom styling */
@@ -169,6 +169,20 @@ a:hover {
   padding-right: 10px !important;
 }
 
+.react-datepicker__header {
+  background-color: #AA4A44 !important;
+  color: white !important;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__day-name {
+  color: white !important;
+}
+
+.react-datepicker__day--selected {
+  background-color: #AA4A44 !important;
+}
+
 /* Prevent the popper from getting cut off or displaced */
 .zindex-dropdown {
   position: relative;
@@ -182,13 +196,13 @@ a:hover {
 
 /* Admin Dashboard */
 .accordion-button:not(.collapsed) {
-  background-color: rgba(184, 134, 11, 0.1);
-  color: #b8860b;
+  background-color: rgba(170, 74, 68, 0.1);
+  color: #AA4A44;
 }
 
 .accordion-button:focus {
-  border-color: #b8860b;
-  box-shadow: 0 0 0 0.25rem rgba(184, 134, 11, 0.25);
+  border-color: #AA4A44;
+  box-shadow: 0 0 0 0.25rem rgba(170, 74, 68, 0.25);
 }
 
 /* Floor Plan styles */
@@ -199,6 +213,23 @@ a:hover {
 
 .table-group:hover {
   transform: scale(1.05);
+}
+
+/* Badge colors for sections */
+.badge-indoor {
+  background-color: #AA4A44;
+}
+
+.badge-outdoor {
+  background-color: #28a745;
+}
+
+.badge-bar {
+  background-color: #17a2b8;
+}
+
+.badge-private {
+  background-color: #6c757d;
 }
 
 /* Booking group colors for floor plan */
@@ -216,6 +247,18 @@ a:hover {
   font-weight: bold;
   font-size: 0.8rem;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Restaurant name styling */
+.restaurant-name {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: #AA4A44;
+}
+
+/* Footer styling */
+footer {
+  background-color: #2c3e50;
 }
 
 /* Responsive adjustments */

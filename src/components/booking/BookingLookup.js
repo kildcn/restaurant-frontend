@@ -25,34 +25,7 @@ const BookingLookup = () => {
     try {
       setLoading(true);
 
-      // Use the mock booking data for development and testing
-      // In production, this would be replaced with the actual API call
-
-      // Mocking a successful response for development
-      setTimeout(() => {
-        const mockBooking = {
-          _id: bookingReference,
-          status: 'confirmed',
-          date: new Date(),
-          timeSlot: {
-            start: new Date(new Date().setHours(19, 0)),
-            end: new Date(new Date().setHours(21, 0))
-          },
-          partySize: 4,
-          customer: {
-            name: 'John Doe',
-            email: customerEmail,
-            phone: '555-123-4567'
-          },
-          specialRequests: 'Window table preferred'
-        };
-
-        setBooking(mockBooking);
-        setLoading(false);
-      }, 1000);
-
-      // Commented out actual API call until backend is ready
-      /*
+      // Make the actual API call now instead of using the mock data
       const response = await restaurantApi.lookupBooking(bookingReference, customerEmail);
 
       if (response.success) {
@@ -60,10 +33,10 @@ const BookingLookup = () => {
       } else {
         setError(response.message || 'Booking not found. Please check your reference number and email.');
       }
-      */
     } catch (error) {
       console.error('Error looking up booking:', error);
       setError('An error occurred while looking up your booking. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -99,7 +72,7 @@ const BookingLookup = () => {
         <Col md={8}>
           <Card className="border-0 shadow mb-4">
             <Card.Body className="p-4">
-              <h2 className="text-center mb-4">Check Reservation Status</h2>
+              <h2 className="text-center mb-4 restaurant-name">Check Reservation Status</h2>
 
               <Form onSubmit={handleSubmit}>
                 <Row>
@@ -172,7 +145,7 @@ const BookingLookup = () => {
                   <Col md={6}>
                     <div className="mb-3">
                       <h5>Booking Reference</h5>
-                      <p className="mb-0">{bookingReference}</p>
+                      <p className="mb-0">{booking._id ? booking._id.substring(booking._id.length - 6).toUpperCase() : ''}</p>
                     </div>
                   </Col>
                 </Row>

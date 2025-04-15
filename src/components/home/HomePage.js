@@ -25,13 +25,18 @@ const HomePage = () => {
   }, []);
 
   const formatOperatingHours = () => {
-    if (!restaurant) return [];
-
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return restaurant.openingHours.map(hour => {
-      if (hour.isClosed) return `${days[hour.day]}: Closed`;
-      return `${days[hour.day]}: ${hour.open} - ${hour.close}`;
-    });
+
+    // Updated hours based on provided info - only open Wednesday to Saturday
+    return [
+      'Sunday: Closed',
+      'Monday: Closed',
+      'Tuesday: Closed',
+      'Wednesday: 6:00 PM - 11:45 PM',
+      'Thursday: 6:00 PM - 11:45 PM',
+      'Friday: 6:00 PM - 11:45 PM',
+      'Saturday: 6:00 PM - 11:45 PM'
+    ];
   };
 
   return (
@@ -47,7 +52,7 @@ const HomePage = () => {
           <Row className="w-100">
             <Col md={6} className="text-white p-4" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
               <h1 className="display-4 mb-4 font-serif fst-italic">L'Eustache</h1>
-              <p className="lead mb-4">Experience fine dining in a casual atmosphere. Our chef combines traditional techniques with modern flavors to create an unforgettable culinary journey.</p>
+              <p className="lead mb-4">A casual French bistro with organic, local and seasonal cuisine accompanied by living wines! We look forward to your visit!</p>
               <Button as={Link} to="/bookings" variant="outline-light" size="lg">
                 Make a Reservation
               </Button>
@@ -62,8 +67,8 @@ const HomePage = () => {
           <Row>
             <Col md={6} className="mb-4 mb-md-0">
               <h2 className="mb-4">Our Story</h2>
-              <p>Founded in 2010, L'Eustache has been serving the community with passion and dedication. Our restaurant combines the richness of French cuisine with local ingredients to create a unique dining experience.</p>
-              <p>Chef Jean-Michel Eustache, with his 25 years of culinary expertise, leads our kitchen team to deliver dishes that are both sophisticated and accessible.</p>
+              <p>L'Eustache is a casual French bistro committed to serving authentic cuisine made with organic, local, and seasonal ingredients. Our menu changes regularly to reflect the freshest seasonal offerings, paired perfectly with our selection of natural wines.</p>
+              <p>Our dining experience allows you to secure your table for a duration of 2 hours. For parties of 7 or more, please contact us directly at restaurantleustache@gmail.com.</p>
             </Col>
             <Col md={6}>
               <h2 className="mb-4">Hours & Location</h2>
@@ -77,7 +82,7 @@ const HomePage = () => {
                     {restaurant.address.city}, {restaurant.address.state} {restaurant.address.zipCode}
                   </address>
                   <p><strong>Phone:</strong> {restaurant.contact.phone}</p>
-                  <p><strong>Email:</strong> {restaurant.contact.email}</p>
+                  <p><strong>Email:</strong> restaurantleustache@gmail.com</p>
                   <div>
                     <strong>Hours:</strong>
                     <ul className="list-unstyled">
@@ -103,17 +108,17 @@ const HomePage = () => {
             {[
               {
                 title: 'Coq au Vin',
-                description: 'Chicken braised with wine, lardons, mushrooms, and garlic',
+                description: 'Free-range chicken braised with organic wine, mushrooms, and heritage vegetables',
                 image: 'https://via.placeholder.com/300x200'
               },
               {
-                title: 'Bouillabaisse',
-                description: 'Provençal seafood stew served with rouille and crusty bread',
+                title: 'Bouillabaisse Provençale',
+                description: 'Fresh-caught seafood stew with locally sourced vegetables and saffron rouille',
                 image: 'https://via.placeholder.com/300x200'
               },
               {
-                title: 'Crème Brûlée',
-                description: 'Rich custard topped with a layer of caramelized sugar',
+                title: 'Tarte Tatin',
+                description: 'Caramelized seasonal apples with our house-made puff pastry and crème fraîche',
                 image: 'https://via.placeholder.com/300x200'
               }
             ].map((item, index) => (
@@ -137,11 +142,11 @@ const HomePage = () => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-5 bg-dark text-white">
+      <section className="py-5" style={{ backgroundColor: '#AA4A44', color: 'white' }}>
         <Container className="text-center">
           <h2 className="mb-4">Ready to Experience L'Eustache?</h2>
-          <p className="lead mb-4">Book your table now and enjoy an unforgettable dining experience.</p>
-          <Button as={Link} to="/bookings" variant="primary" size="lg">
+          <p className="lead mb-4">Book your table now and enjoy our seasonal French cuisine with natural wines.</p>
+          <Button as={Link} to="/bookings" variant="light" size="lg">
             Make a Reservation
           </Button>
         </Container>

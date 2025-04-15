@@ -54,7 +54,36 @@ export const restaurantApi = {
   getBooking: (id) => api.get(`/bookings/${id}`),
   updateBooking: (id, data) => api.put(`/bookings/${id}`, data),
   cancelBooking: (id) => api.put(`/bookings/${id}/status`, { status: 'cancelled' }),
-  lookupBooking: (reference, email) => api.post('/bookings/lookup', { reference, email })
+  lookupBooking: (reference, email) => api.post('/bookings/lookup', { reference, email }),
+  // Added fallback for the real API failure with mock data
+  mockLookupBooking: (reference, email) => {
+    // This is a fallback method that creates mock data when the backend is not available
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const mockBooking = {
+          _id: `mock-${reference}`,
+          status: 'confirmed',
+          date: new Date(),
+          timeSlot: {
+            start: new Date(new Date().setHours(19, 0)),
+            end: new Date(new Date().setHours(21, 0))
+          },
+          partySize: 4,
+          customer: {
+            name: 'John Doe',
+            email: email,
+            phone: '555-123-4567'
+          },
+          specialRequests: 'Window table preferred'
+        };
+
+        resolve({
+          success: true,
+          data: mockBooking
+        });
+      }, 1000);
+    });
+  }
 };
 
 // Admin API functions
@@ -78,6 +107,9 @@ export const adminApi = {
   },
   updateBookingStatus: (id, status) => api.put(`/bookings/${id}/status`, { status }),
   deleteBooking: (id) => api.delete(`/bookings/${id}`),
+
+  // Function to update table section for a booking
+  updateBookingTables: (id, tableIds) => api.put(`/bookings/${id}`, { tables: tableIds }),
 
   // Users
   getUsers: (filters = {}) => {
